@@ -179,7 +179,9 @@ public class Main extends JavaPlugin implements Listener{
             posde.AddPosture(event.getDamage());
             if (event.getEntity() instanceof Player) {
                 //这是被弹的人
-                //((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, 0.2f, 0.1f);
+                if (ThreadLocalRandom.current().nextDouble() < 0.3)
+                    ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                
                 ((Player)event.getEntity()).sendTitle( "","§7⚔", 2, 10, 4);
                 BossBar old = bars.get(((Player)event.getEntity()));
                 if (old != null) old.removePlayer((Player)event.getEntity());
@@ -194,7 +196,9 @@ public class Main extends JavaPlugin implements Listener{
             }
             if (event.getDamager() instanceof Player) {
                 //这是被弹的人
-                //((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.2f, 0.1f);
+                if (ThreadLocalRandom.current().nextDouble() < 0.3)
+                   ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                
                 ((Player)event.getDamager()).sendTitle("", "§7⚔", 2, 10, 4);
                 BossBar old = bars.get(((Player)event.getDamager()));
                 if (old != null) old.removePlayer(((Player)event.getDamager()));

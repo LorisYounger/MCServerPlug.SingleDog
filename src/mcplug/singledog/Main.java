@@ -98,13 +98,13 @@ public class Main extends JavaPlugin implements Listener{
                         ((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, 1000, 0.1f);
                         ((Player)event.getEntity()).sendTitle( "§4危","", 4, 10, 8);
                         BossBar old = bars.get(((Player)event.getEntity()));
-                        if (old != null) old.removeAll();
+                        if (old != null) old.removePlayer((Player)event.getEntity());
                         BossBar bar = Bukkit.createBossBar("", posde.PostToDouble() > 10 ? BarColor.BLUE : BarColor.PURPLE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
                         bar.setProgress(posde.PostToDouble() / 20);
                         bar.addPlayer((Player)event.getEntity());
                         bars.put((Player)event.getEntity(), bar);
                         Bukkit.getScheduler().runTaskLater(this, () -> {
-                            bar.removeAll();
+                            bar.removePlayer((Player)event.getEntity());
                             bars.remove((Player)event.getEntity());
                         }, 60);
                     }
@@ -113,13 +113,13 @@ public class Main extends JavaPlugin implements Listener{
                         ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 1000, 1.1f);
                         ((Player)event.getDamager()).sendTitle("", "§3⚔", 2, 10, 4);
                         BossBar old = bars.get(((Player)event.getDamager()));
-                        if (old != null) old.removeAll();
+                        if (old != null) old.removePlayer(((Player)event.getDamager()));
                         BossBar bar = Bukkit.createBossBar("", posde.PostToDouble() > 15 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
                         bar.setProgress(posde.PostToDouble() / 20);
                         bar.addPlayer((Player)event.getDamager());
                         bars.put((Player)event.getDamager(), bar);
                         Bukkit.getScheduler().runTaskLater(this, () -> {
-                            bar.removeAll();
+                            bar.removePlayer(((Player)event.getDamager()));
                             bars.remove((Player)event.getDamager());
                         }, 50);
                     }
@@ -175,7 +175,7 @@ public class Main extends JavaPlugin implements Listener{
                 }, 50);
             }
             event.setDamage(event.getDamage()*posde.Post()/20);//架势破了多架势/10的伤害 但是不涨架势
-        } else if (ThreadLocalRandom.current().nextBoolean()) {
+        } else {
             posde.AddPosture(event.getDamage());
             if (event.getEntity() instanceof Player) {
                 //这是被弹的人

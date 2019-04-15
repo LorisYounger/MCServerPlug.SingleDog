@@ -6,187 +6,191 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 public class Main extends JavaPlugin implements Listener{
-	@Override  
+    @Override  
     public void onEnable(){  
         //your code here.  
-		this.getLogger().info("---SingleDog---\nDog==Wolf");  
-        Bukkit.getPluginManager().registerEvents(this,this); //ÕâÀïHelloWorldÀàÊÇ¼àÌıÆ÷, ½«µ±Ç°HelloWorld¶ÔÏó×¢²á¼àÌıÆ÷  
+        this.getLogger().info("---SingleDog---\nDog==Wolf");  
+        Bukkit.getPluginManager().registerEvents(this,this); //è¿™é‡ŒHelloWorldç±»æ˜¯ç›‘å¬å™¨, å°†å½“å‰HelloWorldå¯¹è±¡æ³¨å†Œç›‘å¬å™¨  
     }  
 
     @Override      
     public void onDisable(){  
         //your code here.  
-		this.getLogger().info("SingleDog Plugin OFF");  
+        this.getLogger().info("SingleDog Plugin OFF");  
     }
     
     @EventHandler
     public void PlayerDeathEvent(org.bukkit.event.entity.PlayerDeathEvent event) {
-    	//event.setDeathMessage("¡ìl¡ì4²Ë\nÄã´òÓÎÏ·Ïñ²ÌĞìÀ¤");
-		((Player)event.getEntity()).sendTitle( "¡ì4²Ë","¡ìl¡ìcÄã´òÓÎÏ·Ïñ²ÌĞìÀ¤", 20, 50, 20);
+        //event.setDeathMessage("Â§lÂ§4èœ\nä½ æ‰“æ¸¸æˆåƒè”¡å¾å¤");
+        ((Player)event.getEntity()).sendTitle( "Â§4èœ","Â§lÂ§cä½ æ‰“æ¸¸æˆåƒè”¡å¾å¤", 20, 50, 20);
 
-    	UUID uid =  event.getEntity().getUniqueId();
-    	for(int i=0;i<PostureList.size();i++) {
-    		if(uid == PostureList.get(i).user) {
-    			PostureList.remove(i--);
-    		}
-    	}
+        UUID uid =  event.getEntity().getUniqueId();
+        for(int i=0;i<PostureList.size();i++) {
+            if(uid == PostureList.get(i).user) {
+                PostureList.remove(i--);
+            }
+        }
     }
     
-    @EventHandler //Õâ¸ö×¢½â¸æËßBukkitÕâ¸ö·½·¨ÕıÔÚ¼àÌıÄ³¸öÊÂ¼ş, Íæ¼ÒÒÆ¶¯Ê±Bukkit¾Í»áµ÷ÓÃÕâ¸ö·½·¨
+    @EventHandler(ignoreCancelled = true) //è¿™ä¸ªæ³¨è§£å‘Šè¯‰Bukkitè¿™ä¸ªæ–¹æ³•æ­£åœ¨ç›‘å¬æŸä¸ªäº‹ä»¶, ç©å®¶ç§»åŠ¨æ—¶Bukkitå°±ä¼šè°ƒç”¨è¿™ä¸ªæ–¹æ³•
     public void EntityDamageByEntityEvent(org.bukkit.event.entity.EntityDamageByEntityEvent event){
-    	//getLogger().info("Íæ¼ÒÍË³öÁË£¡");
-    	if (!(event.getEntity() instanceof Damageable && event.getDamager() instanceof Damageable) )
-    		return;
-    	long dat = System.currentTimeMillis();// new Date().getTime();
-    	UUID uider = event.getDamager().getUniqueId();
-    	UUID uidee = event.getEntity().getUniqueId();
-    	
-    	//±»´ò·½¼ÜÊÆ
-    	Posture posde = null;
-    	Posture posder = null;
-    	for(int i=0;i<PostureList.size();i++) {
-    		if(uidee == PostureList.get(i).user) {
-    			posde = PostureList.get(i);
-    		}else if(uider == PostureList.get(i).user) {
-    			posder = PostureList.get(i);
-    		}else if(PostureList.get(i).Post() ==0) {
-    			PostureList.remove(i--);
-    		}
-    	}
-    	if (posde == null) {
-    		posde = new Posture(uidee);
-    		PostureList.add(posde);
-    	}
-    	if (posder == null) {
-    		posder = new Posture(uider);
-    		PostureList.add(posder);
-    	}
-    	
-    	
-    	for(int i=0;i<DamagerList.size();i++) {
-    		if(DamagerList.get(i).apptime +400 < dat) {
-    			DamagerList.remove(i--);
-    		}else {
-    			if (DamagerList.get(i).damager == uidee && DamagerList.get(i).damagee == uider) {
-    				//³É¹¦µ¯·´
-    				//Bukkit.broadcastMessage("Äãµ¯·´³É¹¦ÁË£¡¹§Ï²");
-    				//((Damageable)event.getEntity()).damage(DamagerList.get(i).damage);
-    				//Ôö¼Ó±»´ò·½µÄ¼ÜÊÆ
-    				posde.AddPosture(DamagerList.get(i).damage);
-    				//¼õÉÙ×Ô¼ºµÄ¼ÜÊÆÌõ
-    				posder.AddPosture(-DamagerList.get(i).damage);
-    				
-    				
-    				if (event.getEntity() instanceof Player) {
-    					//ÕâÊÇ±»µ¯µÄÈË
-    					((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, (int)(DamagerList.get(i).damage*700),  (int)(DamagerList.get(i).damage));
-    					((Player)event.getEntity()).sendTitle( "¡ì6´óÆÆ","¡ìl¡ì4ÆÆÕÀ"+posde.PostToString(), 4, 10, 8);
-    				}
-    				if (event.getDamager() instanceof Player) {
-    					//ÕâÊÇµ¯µÄÈË
-    					((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE,  (int)(DamagerList.get(i).damage*700),  (int)(DamagerList.get(i).damage));
-    					((Player)event.getDamager()).sendTitle("", "¡ìl¡ì6µ¯·´", 2, 10, 4);
-    				}
-    				//event.getDamager().setdi
-    				DamagerList.remove(i);
-    		    	DamagerList.add(new DamagerRecord(uider,uidee,event.getDamage()));
-    		    	
-    		    	if(posde.IsBreak()) {
-    					//Èç¹û¶Ô·½¼ÜÊÆÆÆÁË
-    		    		event.setDamage(event.getDamage()*posde.Post()/20);//¼ÜÊÆÆÆÁË¶à¼ÜÊÆ/10µÄÉËº¦
-    				}else {
-    		    		posde.AddPosture(event.getDamage());//Èç¹û¼ÜÊÆÃ»ÓĞÆÆ£¬¾Í¼Ó¼ÜÊÆ
-    		    		event.setDamage(0);//ÉËº¦ÉèÖÃÎª0
-    				}
-    				return;
-    			}
-    		}
-    	}
-    	//¹¥»÷Õß×Ô¼º»áÔö¼Ó10%µÄÉËº¦¼ÜÊÆ
-    	posder.AddPosture(event.getDamage()/10);
-    	
-    	//Ã»ÓĞµ¯·´µÄ+ÓĞ¼ÜÊÆÍ³Í³ÉËº¦¼õ°ë
-    	if(posde.IsBreak()) {
-    		if (event.getEntity() instanceof Player) {
-    			//ÕâÊÇ±»µ¯µÄÈË
-    			((Damageable)event.getEntity()).damage(event.getDamage());
-    			((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, (int)(event.getDamage()*700),  (int)(event.getDamage()));
-    			((Player)event.getEntity()).sendTitle( "¡ì4Î£","¡ìcÆÆ·À:"+posde.PostToString(), 4, 10, 8);
-    		}
-    		if (event.getDamager() instanceof Player) {
-    			//ÕâÊÇµ¯µÄÈË
-    			((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE,  (int)(event.getDamage()),  (int)event.getDamage());
-    			((Player)event.getDamager()).sendTitle("", "¡ì1±©»÷", 2, 10, 4);
-    		}
-    		event.setDamage(event.getDamage()*posde.Post()/20);//¼ÜÊÆÆÆÁË¶à¼ÜÊÆ/10µÄÉËº¦ µ«ÊÇ²»ÕÇ¼ÜÊÆ
-    	}else {
-    		posde.AddPosture(event.getDamage());
-    		if (event.getEntity() instanceof Player) {
-    			//ÕâÊÇ±»µ¯µÄÈË
-    			((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, (int)(event.getDamage()*700),  (int)(event.getDamage()));
-    			((Player)event.getEntity()).sendTitle( "","¡ì7±»¶¯:"+posde.PostToString(), 2, 10, 4);
-    		}
-    		if (event.getDamager() instanceof Player) {
-    			
-    			//ÕâÊÇµ¯µÄÈË
-    			((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE,  (int)(event.getDamage()*700),  (int)event.getDamage());
-    			((Player)event.getDamager()).sendTitle("", "¡ì9±»·À", 2, 10, 4);
-    		}
-        	event.setDamage(event.getDamage()*0.1);//ÃâÒß90%ÉËº¦
-    	}
-    	
-    	DamagerList.add(new DamagerRecord(uider,uidee,event.getDamage()));
-    	
+        //getLogger().info("ç©å®¶é€€å‡ºäº†ï¼");
+        if (!(event.getEntity() instanceof Damageable && event.getDamager() instanceof Damageable) )
+            return;
+        long dat = System.currentTimeMillis();// new Date().getTime();
+        UUID uider = event.getDamager().getUniqueId();
+        UUID uidee = event.getEntity().getUniqueId();
+        
+        //è¢«æ‰“æ–¹æ¶åŠ¿
+        Posture posde = null;
+        Posture posder = null;
+        for(int i=0;i<PostureList.size();i++) {
+            if(uidee == PostureList.get(i).user) {
+                posde = PostureList.get(i);
+            }else if(uider == PostureList.get(i).user) {
+                posder = PostureList.get(i);
+            }else if(PostureList.get(i).Post() ==0) {
+                PostureList.remove(i--);
+            }
+        }
+        if (posde == null) {
+            posde = new Posture(uidee);
+            PostureList.add(posde);
+        }
+        if (posder == null) {
+            posder = new Posture(uider);
+            PostureList.add(posder);
+        }
+        
+        
+        for(int i=0;i<DamagerList.size();i++) {
+            if(DamagerList.get(i).apptime +400 < dat) {
+                DamagerList.remove(i--);
+            }else {
+                if (DamagerList.get(i).damager == uidee && DamagerList.get(i).damagee == uider) {
+                    //æˆåŠŸå¼¹å
+                    //Bukkit.broadcastMessage("ä½ å¼¹åæˆåŠŸäº†ï¼æ­å–œ");
+                    //((Damageable)event.getEntity()).damage(DamagerList.get(i).damage);
+                    //å¢åŠ è¢«æ‰“æ–¹çš„æ¶åŠ¿
+                    posde.AddPosture(DamagerList.get(i).damage);
+                    //å‡å°‘è‡ªå·±çš„æ¶åŠ¿æ¡
+                    posder.AddPosture(-DamagerList.get(i).damage);
+                    
+                    
+                    if (event.getEntity() instanceof Player) {
+                        //è¿™æ˜¯è¢«å¼¹çš„äºº
+                        ((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, (int)(DamagerList.get(i).damage*700),  (int)(DamagerList.get(i).damage));
+                        ((Player)event.getEntity()).sendTitle( "Â§6å¤§ç ´","Â§lÂ§4ç ´ç»½ "+posde.PostToString(), 4, 10, 8);
+                    }
+                    if (event.getDamager() instanceof Player) {
+                        //è¿™æ˜¯å¼¹çš„äºº
+                        ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE,  (int)(DamagerList.get(i).damage*700),  (int)(DamagerList.get(i).damage));
+                        ((Player)event.getDamager()).sendTitle("", "Â§lÂ§6å¼¹å", 2, 10, 4);
+                    }
+                    //event.getDamager().setdi
+                    DamagerList.remove(i);
+                    DamagerList.add(new DamagerRecord(uider,uidee,event.getDamage()));
+                    
+                    if(posde.IsBreak()) {
+                        //å¦‚æœå¯¹æ–¹æ¶åŠ¿ç ´äº†
+                        event.setDamage(event.getDamage()*posde.Post()/20);//æ¶åŠ¿ç ´äº†å¤šæ¶åŠ¿/10çš„ä¼¤å®³
+                    }else {
+                        posde.AddPosture(event.getDamage());//å¦‚æœæ¶åŠ¿æ²¡æœ‰ç ´ï¼Œå°±åŠ æ¶åŠ¿
+                        event.setDamage(0);//ä¼¤å®³è®¾ç½®ä¸º0
+                    }
+                    return;
+                }
+            }
+        }
+        //æ”»å‡»è€…è‡ªå·±ä¼šå¢åŠ 10%çš„ä¼¤å®³æ¶åŠ¿
+        posder.AddPosture(event.getDamage()/10);
+        
+        //æ²¡æœ‰å¼¹åçš„+æœ‰æ¶åŠ¿ç»Ÿç»Ÿä¼¤å®³å‡åŠ
+        if(posde.IsBreak()) {
+            if (event.getEntity() instanceof Player) {
+                //è¿™æ˜¯è¢«å¼¹çš„äºº
+                ((Damageable)event.getEntity()).damage(event.getDamage());
+                ((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, (int)(event.getDamage()*700),  (int)(event.getDamage()));
+                ((Player)event.getEntity()).sendTitle( "Â§cå±ï¼","Â§7ç ´é˜²: " + posde.PostToString(), 4, 10, 8);
+            }
+            if (event.getDamager() instanceof Player) {
+                //è¿™æ˜¯å¼¹çš„äºº
+                ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE,  (int)(event.getDamage()),  (int)event.getDamage());
+                ((Player)event.getDamager()).sendTitle("", "Â§1æš´å‡»", 2, 10, 4);
+            }
+            event.setDamage(event.getDamage()*posde.Post()/20);//æ¶åŠ¿ç ´äº†å¤šæ¶åŠ¿/10çš„ä¼¤å®³ ä½†æ˜¯ä¸æ¶¨æ¶åŠ¿
+        }else {
+            posde.AddPosture(event.getDamage());
+            if (event.getEntity() instanceof Player) {
+                //è¿™æ˜¯è¢«å¼¹çš„äºº
+                ((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, (int)(event.getDamage()*700),  (int)(event.getDamage()));
+                ((Player)event.getEntity()).sendTitle( "","Â§7è¢«åŠ¨ "+posde.PostToString(), 2, 10, 4);
+                Bukkit.createBossBar("", BarColor.YELLOW, BarStyle.SEGMENTED_20, BarFlag.DARKEN_SKY);
+            }
+            if (event.getDamager() instanceof Player) {
+                
+                //è¿™æ˜¯å¼¹çš„äºº
+                ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE,  (int)(event.getDamage()*700),  (int)event.getDamage());
+                ((Player)event.getDamager()).sendTitle("", "Â§9è¢«é˜²", 2, 10, 4);
+            }
+            event.setDamage(event.getDamage()*0.1);//å…ç–«90%ä¼¤å®³
+        }
+        
+        DamagerList.add(new DamagerRecord(uider,uidee,event.getDamage()));
+        
     }    
     public static ArrayList<DamagerRecord> DamagerList = new ArrayList<DamagerRecord>();
     public static ArrayList<Posture> PostureList = new ArrayList<Posture>();
 
     public class DamagerRecord {
-    	public UUID damager;
-    	public UUID damagee;
-    	public double damage;
-    	public long apptime;
-    	public DamagerRecord(UUID der,UUID dee,double de) {
-    		damager = der;
-    		damagee = dee;
-    		damage = de;
-    		apptime = System.currentTimeMillis();
-    	}
+        public UUID damager;
+        public UUID damagee;
+        public double damage;
+        public long apptime;
+        public DamagerRecord(UUID der,UUID dee,double de) {
+            damager = der;
+            damagee = dee;
+            damage = de;
+            apptime = System.currentTimeMillis();
+        }
     }
     public class Posture{
-    	public UUID user;
-    	public double post =0;
-    	public long lastrecordtime;
-    	public Posture(UUID usr) {
-    		user = usr;
-    		lastrecordtime =System.currentTimeMillis();
-    	}
-    	public String PostToString(){
-    		Formatter formatter = new Formatter();
-    		String str =formatter.format("%.1f", Post()).toString();
-    		formatter.close();
-			return "¼ÜÊÆ("+str+"/20)";
-    	}
-    	public double Post() {
-    		post -= (System.currentTimeMillis()-lastrecordtime)/1000;
-    		if (post<0)
-    			post =0;
-    		lastrecordtime = System.currentTimeMillis();
-    		return post;
-    	}
-    	public boolean IsBreak() {
-    		return Post()>=20;
-    	}
-    	public void AddPosture(double damage) {
-    		Post();
-    		post += (int)damage;
-    	}
+        public UUID user;
+        public double post =0;
+        public long lastrecordtime;
+        public Posture(UUID usr) {
+            user = usr;
+            lastrecordtime =System.currentTimeMillis();
+        }
+        public String PostToString(){
+            Formatter formatter = new Formatter();
+            String str =formatter.format("%.1f", Post()).toString();
+            formatter.close();
+            return "æ¶åŠ¿ ("+str+"/20)";
+        }
+        public double Post() {
+            post -= (System.currentTimeMillis()-lastrecordtime)/1000;
+            if (post<0)
+                post =0;
+            lastrecordtime = System.currentTimeMillis();
+            return post;
+        }
+        public boolean IsBreak() {
+            return Post()>=20;
+        }
+        public void AddPosture(double damage) {
+            Post();
+            post += (int)damage;
+        }
     }
     
 }

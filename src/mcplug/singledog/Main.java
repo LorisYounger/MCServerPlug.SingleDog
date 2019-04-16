@@ -23,14 +23,14 @@ public class Main extends JavaPlugin implements Listener{
     @Override  
     public void onEnable(){  
         //your code here.  
-        this.getLogger().info("---SingleDog---\nDog==Wolf");  
+        this.getLogger().info("---SingleDog Plugin On---");  
         Bukkit.getPluginManager().registerEvents(this,this); //这里HelloWorld类是监听器, 将当前HelloWorld对象注册监听器  
     }  
 
     @Override      
     public void onDisable(){  
         //your code here.  
-        this.getLogger().info("SingleDog Plugin OFF");  
+        this.getLogger().info("---SingleDog Plugin OFF---");  
     }
     
     @EventHandler
@@ -50,7 +50,6 @@ public class Main extends JavaPlugin implements Listener{
     
     @EventHandler(ignoreCancelled = true) //这个注解告诉Bukkit这个方法正在监听某个事件, 玩家移动时Bukkit就会调用这个方法
     public void EntityDamageByEntityEvent(org.bukkit.event.entity.EntityDamageByEntityEvent event){
-        //getLogger().info("玩家退出了！");
         if (!(event.getEntity() instanceof Damageable && event.getDamager() instanceof Damageable) )
             return;
         long dat = System.currentTimeMillis();// new Date().getTime();
@@ -132,7 +131,7 @@ public class Main extends JavaPlugin implements Listener{
                         event.setDamage(event.getDamage()*posde.Post()/20);//架势破了多架势/10的伤害
                     }else {
                         posde.AddPosture(event.getDamage());//如果架势没有破，就加架势
-                        event.setDamage(event.getDamage() / 50);//伤害设置为/50
+                        event.setDamage(event.getDamage() *0.6);//伤害设置为60%
                     }
                     return;
                 }
@@ -174,12 +173,12 @@ public class Main extends JavaPlugin implements Listener{
                     bars.remove((Player)event.getDamager());
                 }, 50);
             }
-            event.setDamage(event.getDamage()*posde.Post()/20);//架势破了多架势/10的伤害 但是不涨架势
+            event.setDamage(event.getDamage()*posde.Post()/20);//架势破了多架势/20的伤害 但是不涨架势
         } else {
             posde.AddPosture(event.getDamage());
             if (event.getEntity() instanceof Player) {
                 //这是被弹的人
-                if (ThreadLocalRandom.current().nextDouble() < 0.3)
+                if (event.getDamage() > ThreadLocalRandom.current().nextDouble()*5)
                     ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
                 
                 ((Player)event.getEntity()).sendTitle( "","§7⚔", 2, 10, 4);
@@ -196,7 +195,7 @@ public class Main extends JavaPlugin implements Listener{
             }
             if (event.getDamager() instanceof Player) {
                 //这是被弹的人
-                if (ThreadLocalRandom.current().nextDouble() < 0.3)
+                if (event.getDamage() > ThreadLocalRandom.current().nextDouble()*5)
                    ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
                 
                 ((Player)event.getDamager()).sendTitle("", "§7⚔", 2, 10, 4);
@@ -211,7 +210,7 @@ public class Main extends JavaPlugin implements Listener{
                     bars.remove((Player)event.getDamager());
                 }, 40);
             }
-            event.setDamage(event.getDamage()*0.1);//免疫90%伤害
+            event.setDamage(event.getDamage()*0.4);//免疫60%伤害
         }
         
         DamagerList.add(new DamagerRecord(uider,uidee,event.getDamage()));

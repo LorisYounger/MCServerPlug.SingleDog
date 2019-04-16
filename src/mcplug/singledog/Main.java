@@ -97,7 +97,7 @@ public class Main extends JavaPlugin implements Listener{
             if (victim.getType() == EntityType.PLAYER) {
                 Player player = (Player) victim;
                 
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 1000, 0.1f);
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.5f, 0.1f);
                 player.sendTitle( "§4危","", 4, 10, 8);
                 
                 showPostureBossBarFor(postureVictim, player);
@@ -107,7 +107,7 @@ public class Main extends JavaPlugin implements Listener{
             if (damager.getType() == EntityType.PLAYER) {
                 Player player = (Player) damager;
                 
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1000, 1.1f);
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 1.1f);
                 player.sendTitle("", "§3⚔", 2, 10, 4);
                 
                 showPostureBossBarFor(postureVictim, player);
@@ -132,7 +132,7 @@ public class Main extends JavaPlugin implements Listener{
             if (victim.getType() == EntityType.PLAYER) {
                 Player player = (Player) victim;
                 
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 1000, 0.15f);
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.5f, 0.15f);
                 player.sendTitle("§4破","", 4, 10, 8);
                 
                 showPostureBossBarFor(postureVictim, player);
@@ -161,7 +161,7 @@ public class Main extends JavaPlugin implements Listener{
                 Player player = (Player) victim;
                 
                 if (event.getDamage() > ThreadLocalRandom.current().nextDouble() * 5)
-                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.3f, 0.1f);
                 player.sendTitle("", "§7⚔", 2, 10, 4);
                 
                 showPostureBossBarFor(postureVictim, player);
@@ -172,7 +172,7 @@ public class Main extends JavaPlugin implements Listener{
                 Player player = (Player) damager;
                 
                 if (event.getDamage() > ThreadLocalRandom.current().nextDouble() * 5)
-                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.3f, 0.1f);
                 player.sendTitle("", "§7⚔", 2, 10, 4);
                 
                 showPostureBossBarFor(postureVictim, player);

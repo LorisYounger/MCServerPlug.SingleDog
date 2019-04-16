@@ -1,23 +1,16 @@
 package mcplug.singledog;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-
-import javax.swing.CellEditor;
-
+import javax.annotation.concurrent.Immutable;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Monster;
@@ -30,17 +23,14 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
-import com.google.common.collect.Table.Cell;
+
 public class Main extends JavaPlugin implements Listener{
     private final Map<Player, BossBar> bars = Maps.newHashMap();
     private final Map<Entity, Posture> entityPostures = Maps.newHashMap();
-    private final Table<Entity, Entity, DamageRecord> behaviourRecords = HashBasedTable.create();
+    private final Table<Entity, Entity, Record> behaviourRecords = HashBasedTable.create();
     
     @Override  
     public void onEnable(){  
@@ -90,20 +80,20 @@ public class Main extends JavaPlugin implements Listener{
         behaviourRecords.cellSet().removeIf(cell -> cell.getValue().time + 400 < date);
         
         // capature and consume corresponding record
-        DamageRecord record = behaviourRecords.remove(victim, damager);
+        Record record = behaviourRecords.remove(victim, damager);
         
         // successful knockback
         if (record != null) {
             // update postures for victim and damager
-            postureVictim.AddPosture(record.damage);
-            postureDamager.AddPosture(-record.damage);
+            postureVictim.fixPosture(record.damage);
+            postureDamager.fixPosture(-record.damage);
             
-            if (postureVictim.IsBreak()) {
+            if (postureVictim.isBroken()) {
                 // broke posture
-                event.setDamage(event.getDamage() * (postureVictim.Post() / 20));
+                event.setDamage(event.getDamage() * (postureVictim.recalcPosture() / 20));
             } else {
                 // not break yet
-                postureVictim.AddPosture(event.getDamage());
+                postureVictim.fixPosture(event.getDamage());
                 event.setDamage(event.getDamage() * 0.6);
             }
             
@@ -128,7 +118,7 @@ public class Main extends JavaPlugin implements Listener{
             }
             
             // update the record anyway
-            behaviourRecords.put(victim, damager, new DamageRecord(event.getDamage()));
+            behaviourRecords.put(victim, damager, new Record(event.getDamage()));
             
             // here we go as handled as a successful knockback
             return;
@@ -138,10 +128,10 @@ public class Main extends JavaPlugin implements Listener{
          * Non-knockback handling
          */
         // increase posture for damager
-        postureDamager.AddPosture(event.getDamage() / 10);
+        postureDamager.fixPosture(event.getDamage() / 10);
         
         // broken victim posture
-        if(postureVictim.IsBreak()) {
+        if(postureVictim.isBroken()) {
             // notify victim for broken posture
             if (victim.getType() == EntityType.PLAYER) {
                 Player player = (Player) victim;
@@ -156,19 +146,19 @@ public class Main extends JavaPlugin implements Listener{
             if (damager.getType() == EntityType.PLAYER) {
                 Player player = (Player) damager;
                 
-                ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 1000, 1.1f);
-                ((Player)event.getDamager()).sendTitle("", "§6⚔", 2, 10, 4);
+                player.playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 1000, 1.1f);
+                player.sendTitle("", "§6⚔", 2, 10, 4);
                 
                 showPostureBossBarFor(postureVictim, player);
             }
             
             // enhance damage for victim as broken posture
-            event.setDamage(event.getDamage() * (1.0 + postureVictim.Post() / 20));
+            event.setDamage(event.getDamage() * (1.0 + postureVictim.recalcPosture() / 20));
             
         // non-broken victim posture
         } else {
             // increase posture for victim as they have been attacked
-            postureVictim.AddPosture(event.getDamage());
+            postureVictim.fixPosture(event.getDamage());
             
             // notify victim for posture increment
             if (victim.getType() == EntityType.PLAYER) {
@@ -195,7 +185,7 @@ public class Main extends JavaPlugin implements Listener{
         }
         
         // update the record anyway
-        behaviourRecords.put(victim, damager, new DamageRecord(event.getDamage()));
+        behaviourRecords.put(victim, damager, new Record(event.getDamage()));
     }    
     
     private void showPostureBossBarFor(Posture posture, Player player) {
@@ -209,7 +199,7 @@ public class Main extends JavaPlugin implements Listener{
             previousBar.removeAll();
         
         // update new bar for victim
-        BossBar bar = Bukkit.createBossBar("", posture.formattedPosture() > 10 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
+        BossBar bar = Bukkit.createBossBar("", posture.recalcPosture() > 10 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
         bar.setProgress(posture.bossbarProgress());
         bar.addPlayer(player);
         bars.put(player, bar);
@@ -221,22 +211,23 @@ public class Main extends JavaPlugin implements Listener{
         }, 60);
     }
     
-    private static class DamageRecord {
+    @Immutable
+    private static class Record {
         private final long time = System.currentTimeMillis();
         private final double damage;
         
-        public DamageRecord(double damage) {
+        public Record(double damage) {
             this.damage = damage;
         }
     }
     
     public static class Posture {
         private static final DecimalFormat POSTURE_FORMAT = new DecimalFormat("#.0");
-        public double post = 0;
-        public long lastrecordtime = System.currentTimeMillis();
+        public double posture = 0;
+        public long lastRecalcTime = System.currentTimeMillis();
         
         public double formattedPosture() {
-            return Double.valueOf(POSTURE_FORMAT.format(Post())).doubleValue();
+            return Double.valueOf(POSTURE_FORMAT.format(recalcPosture())).doubleValue();
         }
         
         public double bossbarProgress() {
@@ -244,21 +235,23 @@ public class Main extends JavaPlugin implements Listener{
             return progress > 1 ? 1 : progress;
         }
         
-        public double Post() {
-            post -= (System.currentTimeMillis() - lastrecordtime) / 1000;
-            if (post<0)
-                post =0;
-            lastrecordtime = System.currentTimeMillis();
-            return post;
+        public double recalcPosture() {
+            long current = System.currentTimeMillis();
+            
+            posture -= (current - lastRecalcTime) / 1000;
+            posture = posture < 0 ? 0 : posture;
+            
+            lastRecalcTime = current;
+            return posture;
         }
         
-        public boolean IsBreak() {
-            return Post()>=20;
+        public boolean isBroken() {
+            return recalcPosture() >= 20;
         }
         
-        public void AddPosture(double damage) {
-            Post();
-            post += (int)damage;
+        public void fixPosture(double damage) {
+            recalcPosture();
+            posture += damage;
         }
     }
     

@@ -1,5 +1,6 @@
 package mcplug.singledog;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Map;
@@ -39,7 +40,7 @@ import com.google.common.collect.Table.Cell;
 public class Main extends JavaPlugin implements Listener{
     private final Map<Player, BossBar> bars = Maps.newHashMap();
     private final Map<Entity, Posture> entityPostures = Maps.newHashMap();
-    private final Table<Entity, Entity, DamagerRecord> behaviourRecords = HashBasedTable.create();
+    private final Table<Entity, Entity, DamageRecord> behaviourRecords = HashBasedTable.create();
     
     @Override  
     public void onEnable(){  
@@ -86,10 +87,10 @@ public class Main extends JavaPlugin implements Listener{
          * Knockback handling
          */
         // cleanup chance-missed records
-        behaviourRecords.cellSet().removeIf(cell -> cell.getValue().apptime + 400 < date);
+        behaviourRecords.cellSet().removeIf(cell -> cell.getValue().time + 400 < date);
         
         // capature and consume corresponding record
-        DamagerRecord record = behaviourRecords.remove(victim, damager);
+        DamageRecord record = behaviourRecords.remove(victim, damager);
         
         // successful knockback
         if (record != null) {
@@ -97,39 +98,7 @@ public class Main extends JavaPlugin implements Listener{
             postureVictim.AddPosture(record.damage);
             postureDamager.AddPosture(-record.damage);
             
-            // notify victim for posture increment
-            if (victim.getType() == EntityType.PLAYER) {
-                ((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, 1000, 0.1f);
-                ((Player)event.getEntity()).sendTitle( "§4危","", 4, 10, 8);
-                BossBar old = bars.get(((Player)event.getEntity()));
-                if (old != null) old.removePlayer((Player)event.getEntity());
-                BossBar bar = Bukkit.createBossBar("", postureVictim.PostToDouble() > 10 ? BarColor.BLUE : BarColor.PURPLE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
-                bar.setProgress(postureVictim.PostToDouble() / 20);
-                bar.addPlayer((Player)event.getEntity());
-                bars.put((Player)event.getEntity(), bar);
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    bar.removePlayer((Player)event.getEntity());
-                    bars.remove((Player)event.getEntity());
-                }, 60);
-            }
-            
-            // notify victim for success knockback
-            if (damager.getType() == EntityType.PLAYER) {
-                ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 1000, 1.1f);
-                ((Player)event.getDamager()).sendTitle("", "§3⚔", 2, 10, 4);
-                BossBar old = bars.get(((Player)event.getDamager()));
-                if (old != null) old.removePlayer(((Player)event.getDamager()));
-                BossBar bar = Bukkit.createBossBar("", postureVictim.PostToDouble() > 15 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
-                bar.setProgress(postureVictim.PostToDouble() / 20);
-                bar.addPlayer((Player)event.getDamager());
-                bars.put((Player)event.getDamager(), bar);
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    bar.removePlayer(((Player)event.getDamager()));
-                    bars.remove((Player)event.getDamager());
-                }, 50);
-            }
-            
-            if(postureVictim.IsBreak()) {
+            if (postureVictim.IsBreak()) {
                 // broke posture
                 event.setDamage(event.getDamage() * (postureVictim.Post() / 20));
             } else {
@@ -138,8 +107,28 @@ public class Main extends JavaPlugin implements Listener{
                 event.setDamage(event.getDamage() * 0.6);
             }
             
+            // notify victim for posture increment
+            if (victim.getType() == EntityType.PLAYER) {
+                Player player = (Player) victim;
+                
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 1000, 0.1f);
+                player.sendTitle( "§4危","", 4, 10, 8);
+                
+                showPostureBossBarFor(postureVictim, player);
+            }
+            
+            // notify victim for success knockback
+            if (damager.getType() == EntityType.PLAYER) {
+                Player player = (Player) damager;
+                
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1000, 1.1f);
+                player.sendTitle("", "§3⚔", 2, 10, 4);
+                
+                showPostureBossBarFor(postureVictim, player);
+            }
+            
             // update the record anyway
-            behaviourRecords.put(victim, damager, new DamagerRecord(event.getDamage()));
+            behaviourRecords.put(victim, damager, new DamageRecord(event.getDamage()));
             
             // here we go as handled as a successful knockback
             return;
@@ -154,36 +143,23 @@ public class Main extends JavaPlugin implements Listener{
         // broken victim posture
         if(postureVictim.IsBreak()) {
             // notify victim for broken posture
-            if (event.getEntity() instanceof Player) {
-                ((Damageable)event.getEntity()).damage(event.getDamage());
-                ((Player)event.getEntity()).playSound(((Player)event.getEntity()).getLocation(), Sound.BLOCK_ANVIL_FALL, 1000, 0.15f);
-                ((Player)event.getEntity()).sendTitle( "§4破","", 4, 10, 8);
-                BossBar old = bars.get(((Player)event.getEntity()));
-                if (old != null) old.removePlayer((Player)event.getEntity());
-                BossBar bar = Bukkit.createBossBar("", postureVictim.PostToDouble() > 10 ? BarColor.BLUE : BarColor.PURPLE, BarStyle.SOLID, BarFlag.CREATE_FOG);
-                bar.setProgress(postureVictim.PostToDouble() / 20);
-                bar.addPlayer((Player)event.getEntity());
-                bars.put((Player)event.getEntity(), bar);
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    bar.removePlayer((Player)event.getEntity());
-                    bars.remove((Player)event.getEntity());
-                }, 60);
+            if (victim.getType() == EntityType.PLAYER) {
+                Player player = (Player) victim;
+                
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 1000, 0.15f);
+                player.sendTitle("§4破","", 4, 10, 8);
+                
+                showPostureBossBarFor(postureVictim, player);
             }
             
             // notify damager for a non-knockback and posture-break attack
-            if (event.getDamager() instanceof Player) {
+            if (damager.getType() == EntityType.PLAYER) {
+                Player player = (Player) damager;
+                
                 ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 1000, 1.1f);
                 ((Player)event.getDamager()).sendTitle("", "§6⚔", 2, 10, 4);
-                BossBar old = bars.get(((Player)event.getDamager()));
-                if (old != null) old.removePlayer(((Player)event.getDamager()));
-                BossBar bar = Bukkit.createBossBar("", postureVictim.PostToDouble() > 15 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.CREATE_FOG);
-                bar.setProgress(postureVictim.PostToDouble() / 20);
-                bar.addPlayer((Player)event.getDamager());
-                bars.put((Player)event.getDamager(), bar);
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    bar.removePlayer(((Player)event.getDamager()));
-                    bars.remove((Player)event.getDamager());
-                }, 50);
+                
+                showPostureBossBarFor(postureVictim, player);
             }
             
             // enhance damage for victim as broken posture
@@ -195,40 +171,23 @@ public class Main extends JavaPlugin implements Listener{
             postureVictim.AddPosture(event.getDamage());
             
             // notify victim for posture increment
-            if (event.getEntity() instanceof Player) {
-                if (event.getDamage() > ThreadLocalRandom.current().nextDouble()*5)
-                    ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+            if (victim.getType() == EntityType.PLAYER) {
+                Player player = (Player) victim;
                 
-                ((Player)event.getEntity()).sendTitle( "","§7⚔", 2, 10, 4);
-                BossBar old = bars.get(((Player)event.getEntity()));
-                if (old != null) old.removePlayer((Player)event.getEntity());
-                BossBar bar = Bukkit.createBossBar("", postureVictim.PostToDouble() > 10 ? BarColor.BLUE : BarColor.PURPLE, BarStyle.SOLID);
-                bar.setProgress(postureVictim.PostToDouble() / 20);
-                bar.addPlayer((Player)event.getEntity());
-                bars.put((Player)event.getEntity(), bar);
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    bar.removePlayer((Player)event.getEntity());
-                    bars.remove((Player)event.getEntity());
-                }, 40);
+                if (event.getDamage() > ThreadLocalRandom.current().nextDouble() * 5)
+                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                
+                showPostureBossBarFor(postureVictim, player);
             }
             
             // notify damager for a non-knockback and non-posture-break attack
-            if (event.getDamager() instanceof Player) {
-                //这是被弹的人
-                if (event.getDamage() > ThreadLocalRandom.current().nextDouble()*5)
-                    ((Player)event.getDamager()).playSound(((Player)event.getDamager()).getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+            if (damager.getType() == EntityType.PLAYER) {
+                Player player = (Player) damager;
                 
-                ((Player)event.getDamager()).sendTitle("", "§7⚔", 2, 10, 4);
-                BossBar old = bars.get(((Player)event.getDamager()));
-                if (old != null) old.removePlayer(((Player)event.getDamager()));
-                BossBar bar = Bukkit.createBossBar("", postureVictim.PostToDouble() > 10 ? BarColor.BLUE : BarColor.PURPLE, BarStyle.SOLID);
-                bar.setProgress(postureVictim.PostToDouble() / 20);
-                bar.addPlayer((Player)event.getDamager());
-                bars.put((Player)event.getDamager(), bar);
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    bar.removePlayer(((Player)event.getDamager()));
-                    bars.remove((Player)event.getDamager());
-                }, 40);
+                if (event.getDamage() > ThreadLocalRandom.current().nextDouble()*5)
+                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                
+                showPostureBossBarFor(postureVictim, player);
             }
             
             // decrease damage for victim as there is posture
@@ -236,46 +195,67 @@ public class Main extends JavaPlugin implements Listener{
         }
         
         // update the record anyway
-        behaviourRecords.put(victim, damager, new DamagerRecord(event.getDamage()));
+        behaviourRecords.put(victim, damager, new DamageRecord(event.getDamage()));
     }    
     
-    public class DamagerRecord {
-        public double damage;
-        public long apptime;
-        public DamagerRecord(double de) {
-            damage = de;
-            apptime = System.currentTimeMillis();
+    private void showPostureBossBarFor(Posture posture, Player player) {
+        /*
+         * Bossbar stuffs
+         */
+        BossBar previousBar = bars.get(player);
+        
+        // throw away previous bar
+        if (previousBar != null)
+            previousBar.removeAll();
+        
+        // update new bar for victim
+        BossBar bar = Bukkit.createBossBar("", posture.formattedPosture() > 10 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
+        bar.setProgress(posture.bossbarProgress());
+        bar.addPlayer(player);
+        bars.put(player, bar);
+        
+        // pending bar cleanup
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            bar.removeAll();
+            bars.remove(player);
+        }, 60);
+    }
+    
+    private static class DamageRecord {
+        private final long time = System.currentTimeMillis();
+        private final double damage;
+        
+        public DamageRecord(double damage) {
+            this.damage = damage;
         }
     }
     
-    public class Posture{
-        public double post =0;
-        public long lastrecordtime;
-        public Posture() {
-            lastrecordtime =System.currentTimeMillis();
+    public static class Posture {
+        private static final DecimalFormat POSTURE_FORMAT = new DecimalFormat("#.0");
+        public double post = 0;
+        public long lastrecordtime = System.currentTimeMillis();
+        
+        public double formattedPosture() {
+            return Double.valueOf(POSTURE_FORMAT.format(Post())).doubleValue();
         }
-        public String PostToString(){
-            Formatter formatter = new Formatter();
-            String str =formatter.format("%.1f", Post()).toString();
-            formatter.close();
-            return "架势 ("+str+"/20)";
+        
+        public double bossbarProgress() {
+            double progress = formattedPosture() / 20;
+            return progress > 1 ? 1 : progress;
         }
-        public double PostToDouble(){
-            Formatter formatter = new Formatter();
-            String str =formatter.format("%.1f", Post()).toString();
-            formatter.close();
-            return Double.valueOf(str) > 20 ? 20 :Double.valueOf(str);
-        }
+        
         public double Post() {
-            post -= (System.currentTimeMillis()-lastrecordtime)/1000;
+            post -= (System.currentTimeMillis() - lastrecordtime) / 1000;
             if (post<0)
                 post =0;
             lastrecordtime = System.currentTimeMillis();
             return post;
         }
+        
         public boolean IsBreak() {
             return Post()>=20;
         }
+        
         public void AddPosture(double damage) {
             Post();
             post += (int)damage;

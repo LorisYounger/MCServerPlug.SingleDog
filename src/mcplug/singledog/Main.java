@@ -21,14 +21,12 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
-
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 
 public class Main extends JavaPlugin implements Listener{
-    private final Map<Player, BossBar> bars = Maps.newHashMap();
+    private final Map<Player, BossBar> displayedBars = Maps.newHashMap();
     private final Map<Entity, Posture> entityPostures = Maps.newHashMap();
     private final Table<Entity, Entity, Record> behaviourRecords = HashBasedTable.create();
     
@@ -192,7 +190,7 @@ public class Main extends JavaPlugin implements Listener{
         /*
          * Bossbar stuffs
          */
-        BossBar previousBar = bars.get(player);
+        BossBar previousBar = displayedBars.get(player);
         
         // throw away previous bar
         if (previousBar != null)
@@ -202,12 +200,12 @@ public class Main extends JavaPlugin implements Listener{
         BossBar bar = Bukkit.createBossBar("", posture.recalcPosture() > 10 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
         bar.setProgress(posture.bossbarProgress());
         bar.addPlayer(player);
-        bars.put(player, bar);
+        displayedBars.put(player, bar);
         
         // pending bar cleanup
         Bukkit.getScheduler().runTaskLater(this, () -> {
             bar.removeAll();
-            bars.remove(player, bar);
+            displayedBars.remove(player, bar);
         }, 60);
     }
     

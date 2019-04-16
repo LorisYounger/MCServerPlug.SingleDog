@@ -2,7 +2,6 @@ package mcplug.singledog;
 
 import java.text.DecimalFormat;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.annotation.concurrent.Immutable;
 import org.bukkit.Bukkit;
@@ -61,8 +60,6 @@ public class Main extends JavaPlugin implements Listener{
             return;
         
         long date = System.currentTimeMillis();
-        UUID uider = event.getDamager().getUniqueId();
-        UUID uidee = event.getEntity().getUniqueId();
         
         // capature postures for victim and damager
         Posture postureVictim = entityPostures.get(victim);

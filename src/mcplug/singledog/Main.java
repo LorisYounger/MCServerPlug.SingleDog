@@ -21,6 +21,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
@@ -38,17 +39,17 @@ public class Main extends JavaPlugin implements Listener{
     
     // cleanup
     @EventHandler
-    public void PlayerDeathEvent(EntityDeathEvent event) {
+    public void onPlayerDeath(EntityDeathEvent event) {
         entityPostures.remove(event.getEntity());
     }
     
     @EventHandler
-    public void PlayerDeathEvent(PlayerQuitEvent event) {
+    public void onPlayerQuit(PlayerQuitEvent event) {
         entityPostures.remove(event.getPlayer());
     }
     
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void EntityDamageByEntityEvent(EntityDamageByEntityEvent event){
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event){
         Entity victim = event.getEntity();
         // ignore victim except monsters and players
         if (!(victim instanceof Monster || victim instanceof Player))
@@ -87,7 +88,7 @@ public class Main extends JavaPlugin implements Listener{
             
             if (postureVictim.isBroken()) {
                 // broke posture
-                event.setDamage(event.getDamage() * (postureVictim.recalcPosture() / 20));
+                event.setDamage(event.getDamage() * (1.0 + postureVictim.recalcPosture() / 20));
             } else {
                 // not break yet
                 postureVictim.fixPosture(event.getDamage());
@@ -163,6 +164,7 @@ public class Main extends JavaPlugin implements Listener{
                 
                 if (event.getDamage() > ThreadLocalRandom.current().nextDouble() * 5)
                     player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                player.sendTitle("", "§7⚔", 2, 10, 4);
                 
                 showPostureBossBarFor(postureVictim, player);
             }
@@ -171,8 +173,9 @@ public class Main extends JavaPlugin implements Listener{
             if (damager.getType() == EntityType.PLAYER) {
                 Player player = (Player) damager;
                 
-                if (event.getDamage() > ThreadLocalRandom.current().nextDouble()*5)
+                if (event.getDamage() > ThreadLocalRandom.current().nextDouble() * 5)
                     player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.5f, 0.1f);
+                player.sendTitle("", "§7⚔", 2, 10, 4);
                 
                 showPostureBossBarFor(postureVictim, player);
             }
@@ -204,7 +207,7 @@ public class Main extends JavaPlugin implements Listener{
         // pending bar cleanup
         Bukkit.getScheduler().runTaskLater(this, () -> {
             bar.removeAll();
-            bars.remove(player);
+            bars.remove(player, bar);
         }, 60);
     }
     

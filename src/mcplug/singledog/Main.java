@@ -98,9 +98,10 @@ public class Main extends JavaPlugin implements Listener{
                 Player player = (Player) victim;
                 
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.5f, 0.1f);
-                player.sendTitle( "§4危","", 4, 10, 8);
+                player.sendTitle( "§l§4危", "§r"+postureVictim.postureToString(), 4, 10, 8);
                 
-                showPostureBossBarFor(postureVictim, player);
+                //Players will be confused
+                //showPostureBossBarFor(postureVictim, player);
             }
             
             // notify victim for success knockback
@@ -133,7 +134,7 @@ public class Main extends JavaPlugin implements Listener{
                 Player player = (Player) victim;
                 
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.5f, 0.15f);
-                player.sendTitle("§4破","", 4, 10, 8);
+                player.sendTitle("§l§4破","", 4, 10, 8);
                 
                 showPostureBossBarFor(postureVictim, player);
             }
@@ -163,8 +164,8 @@ public class Main extends JavaPlugin implements Listener{
                 if (event.getDamage() > ThreadLocalRandom.current().nextDouble() * 5)
                     player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.3f, 0.1f);
                 player.sendTitle("", "§7⚔", 2, 10, 4);
-                
-                showPostureBossBarFor(postureVictim, player);
+                //Players will be confused
+                //showPostureBossBarFor(postureVictim, player);
             }
             
             // notify damager for a non-knockback and non-posture-break attack
@@ -173,7 +174,7 @@ public class Main extends JavaPlugin implements Listener{
                 
                 if (event.getDamage() > ThreadLocalRandom.current().nextDouble() * 5)
                     player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.3f, 0.1f);
-                player.sendTitle("", "§7⚔", 2, 10, 4);
+                player.sendTitle("", "§7⚔ §r"+postureVictim.postureToString(), 2, 10, 4);
                 
                 showPostureBossBarFor(postureVictim, player);
             }
@@ -197,7 +198,7 @@ public class Main extends JavaPlugin implements Listener{
             previousBar.removeAll();
         
         // update new bar for victim
-        BossBar bar = Bukkit.createBossBar("", posture.recalcPosture() > 10 ? BarColor.PURPLE : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
+        BossBar bar = Bukkit.createBossBar("", posture.recalcPosture() > 10 ? (posture.recalcPosture() > 15 ? BarColor.RED : BarColor.YELLOW) : BarColor.BLUE, BarStyle.SOLID, BarFlag.DARKEN_SKY);
         bar.setProgress(posture.bossbarProgress());
         bar.addPlayer(player);
         displayedBars.put(player, bar);
@@ -226,6 +227,10 @@ public class Main extends JavaPlugin implements Listener{
         
         public double formattedPosture() {
             return Double.valueOf(POSTURE_FORMAT.format(recalcPosture())).doubleValue();
+        }
+        
+        public String postureToString() {
+            return POSTURE_FORMAT.format(recalcPosture())+"/20";
         }
         
         public double bossbarProgress() {

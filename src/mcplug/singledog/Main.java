@@ -54,9 +54,9 @@ public class Main extends JavaPlugin implements Listener{
             return;
         
         Entity damager = event.getDamager();
-        // ignore damager except monsters and players
+        /* ignore damager except monsters and players
         if (!(damager instanceof Monster || damager instanceof Player))
-            return;
+            return;*/
         
         long date = System.currentTimeMillis();
         
